@@ -1433,9 +1433,20 @@ async function sendToBackend(instrumento, calc, pdfResult){
   return result;
 }
 
+/* URL de la aplicación web privada de Apps Script (Implementar → Administrar implementaciones → /exec).
+   Cuando la página se abre fuera de Apps Script (p. ej. GitHub Pages), el botón lleva a esta URL. */
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbztrdm-sgaN6zNyHWPD7NnmkfAwuLjm2Ej3B2pNmDk9oBb-bwu5CyTvmmVJV7PSPS51/exec';
+let OUTSIDE_APPS_SCRIPT = false;
+
 async function loadSecureBootstrap(){
   const button = document.getElementById('start-platform');
   const status = document.getElementById('access-status');
+  if(!(window.google && google.script && google.script.run)){
+    OUTSIDE_APPS_SCRIPT = true;
+    button.disabled = false; button.textContent = 'Ingresar a la plataforma';
+    status.textContent = 'Se abrirá la plataforma segura; inicia sesión con tu cuenta institucional de Google.';
+    return;
+  }
   try{
     const data = await callServer('getAuthorizedBootstrap');
     if(!data || !data.ok) throw new Error(data && data.error ? data.error : 'Acceso no autorizado.');
@@ -1766,6 +1777,7 @@ document.querySelectorAll('select[name="area"]').forEach(sel => {
    INIT
    ============================================================ */
 document.getElementById('start-platform').addEventListener('click', () => {
+  if(OUTSIDE_APPS_SCRIPT){ window.top.location.href = WEB_APP_URL; return; }
   document.getElementById('presentation').style.display = 'none';
   document.getElementById('landing').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
